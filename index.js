@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors')
 require('dotenv').config();
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const app = express();
 const port = process.env.PORT || 5000;
 // middleware
@@ -17,7 +17,7 @@ async function run() {
         const dataCollection = client.db("softmindAffiliate").collection("data");
 
         app.get('/payments', async (req, res) => {
-            const query = {};
+            const query = { method: 'payment' };
             const cursor = dataCollection.find(query);
             const result = await cursor.toArray();
             res.send(result)
@@ -31,8 +31,36 @@ async function run() {
             res.send(result);
         })
 
+        app.delete('/payments/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) }
+            const result = await dataCollection.deleteOne(query)
+            res.send(result);
+            console.log(result);
+        })
+        // expenses
+        app.get('/expenses', async (req, res) => {
+            const query = { purpose: 'marketing' };
+            const cursor = dataCollection.find(query);
+            const result = await cursor.toArray();
+            res.send(result)
+            console.log(result);
+        })
 
+        app.post('/expenses', async (req, res) => {
+            const newExpense = req.body;
+            const result = await dataCollection.insertOne(newExpense);
+            console.log(result);
+            res.send(result);
+        })
 
+        app.delete('/expenses/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) }
+            const result = await dataCollection.deleteOne(query)
+            res.send(result);
+            console.log(result);
+        })
 
     } finally { }
 
@@ -40,11 +68,6 @@ async function run() {
 run().catch(console.log)
 
 
-
-app.get('/', (req, res) => {
-    res.send({ thank: 'user' })
-    console.log('responding from home');
-})
 app.listen(port, () => {
     console.log(`Port ${port} is responding`);
 })
